@@ -1,0 +1,40 @@
+version: '3.8'
+
+networks:
+  PrometheusGrafanaLoki:
+    driver: bridge
+
+volumes:
+  grafana_storage:
+  prometheus:
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    command: ["--config.file=/prometheus-data/prometheus.yml"]
+    volumes:
+      - ./prometheus-config:/prometheus-data
+      - prometheus:/prometheus
+    ports:
+      - 9090:9090
+    networks:
+      - PrometheusGrafanaLoki
+  loki:
+    image: grafana/loki:latest
+    command: ["-config.file=/etc/loki/loki-config.yaml"]
+    volumes:
+      - ./loki-config:/etc/loki
+    ports:
+      - 3100:3100
+    networks:
+      - PrometheusGrafanaLoki
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_storage:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - PrometheusGrafanaLoki
